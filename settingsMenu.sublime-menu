@@ -1,0 +1,35 @@
+[
+    {
+        "caption": "Preferences",
+        "children": [
+            {
+                "caption": "Package Settings",
+                "children": [
+                    {
+                        "caption": "Pushbullet",
+                        "children": [
+                            {
+                                "args": {
+                                    "file": "${packages}/Pushbullet/Settings/Pushb.sublime-settings"
+                                },
+                                "caption": "Settings – Default",
+                                "command": "open_file"
+                            },
+                            {
+                                "args": {
+                                    "file": "${packages}/User/Pushbullet.sublime-settings"
+                                },
+                                "caption": "Settings – User",
+                                "command": "open_file"
+                            }
+                        ]
+                    }
+                ],
+                "id": "package-settings",
+                "mnemonic": "P"
+            }
+        ],
+        "id": "preferences",
+        "mnemonic": "n"
+    }
+]

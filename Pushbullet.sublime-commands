@@ -1,0 +1,6 @@
+[
+	{
+		"caption": "Pushbullet: Push to all devices",
+		"command": "pushbullet_send_note"
+	}
+]
