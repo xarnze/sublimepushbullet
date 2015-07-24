@@ -18,4 +18,4 @@ Push from Sublime text 3 to all your devices.
 
 ## Usage
 
-In the **Command Pallet** (Ctrl+shift+p) type pushbullet and select an option
+In the **Command Pallet** (Ctrl+shift+p) type pushbullet and select an option, the first time you use it you'll be prompted for your pushbullet API key which you can get from here (https://www.pushbullet.com/#settings) under Access Key
