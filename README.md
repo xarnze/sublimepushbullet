@@ -1,4 +1,5 @@
-# SublimePushbullet
+# SublimePushbullet 
+[![gratipay](https://img.shields.io/gratipay/xarnze.svg)](https://gratipay.com/~xarnze/)
 
 Push from Sublime text 3 to all your devices.
 
