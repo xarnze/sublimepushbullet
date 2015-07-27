@@ -6,6 +6,7 @@ import threading
 import json
 import os
 import webbrowser
+import sublime_requests as requests
 
 class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -64,6 +65,26 @@ class PushbulletSendNoteToDeviceCommand(sublime_plugin.TextCommand):
 		thread.start()
 		self.handle_threads(edit, thread)
 
+	def handle_threads(self, edit, thread, offset=0, i=0, dir=1):
+		if thread.is_alive():
+			# This animates a little activity indicator in the status area
+			before = i % 8
+			after = (7) - before
+			if not after:
+				dir = -1
+			if not before:
+				dir = 1
+			i += dir
+			self.view.set_status('pushbullet', 'Pushing [%s=%s]' % \
+				(' ' * before, ' ' * after))
+
+			sublime.set_timeout(lambda: self.handle_threads(edit, thread,
+				offset, i, dir), 100)
+			return
+		else:
+			self.view.erase_status('pushbullet')
+			print(json.dumps(thread.result["devices"]).encode("utf8"))
+
 class ApiCall(threading.Thread):
 	def __init__(self, data, url):
 		threading.Thread.__init__(self)
@@ -75,8 +96,11 @@ class ApiCall(threading.Thread):
 		settings = sublime.load_settings('Pushbullet.sublime-settings')
 		authheader =  "Bearer " + settings.get("token")
 		req.add_header("Authorization", authheader);
-		req.add_header('Content-Type', 'application/json')
-		file = urllib.request.urlopen(req, json.dumps(self.data).encode("utf8"))
-		data = file.read()
-		file.close()
+		if self.data != None:
+			req.add_header('Content-Type', 'application/json')
+			pass
+		response = urllib.request.urlopen(req, json.dumps(self.data).encode("utf8"))
+		encoding = response.headers.get_content_charset()
+		data = json.loads(response.readall().decode(encoding))
+		response.close()
 		self.result = data
