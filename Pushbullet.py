@@ -5,18 +5,22 @@ import base64
 import threading
 import json
 import os
+import webbrowser
 
 class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
-		data = {
-			"type" : 'note',
-			"title" : self.sublime.view.name(),
-			"body" : self.sublime.view.substr(sublime.Region(0, self.sublime.view.size()))
-		}
-		thread = ApiCall(data, 'https://api.pushbullet.com/v2/pushes');
-		thread.sublime = self
-		thread.start()
-		self.handle_threads(edit, thread)
+		keyEntered = self.check_api_key(self.view.window())
+		if keyEntered == 1:
+			data = {
+				"type" : 'note',
+				"title" : self.view.name(),
+				"body" : self.view.substr(sublime.Region(0, self.view.size()))
+			}
+			thread = ApiCall(data, 'https://api.pushbullet.com/v2/pushes');
+			thread.sublime = self
+			thread.start()
+			self.handle_threads(edit, thread)
+			pass
 
 	def handle_threads(self, edit, thread, offset=0, i=0, dir=1):
 		if thread.is_alive():
@@ -37,11 +41,34 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 		else:
 			self.view.erase_status('pushbullet')
 
+	def check_api_key(self, window):
+		settings = sublime.load_settings('Pushbullet.sublime-settings')
+		if settings.get("token") == None:
+			sublime.message_dialog("Please Enter your Pushbullet API key")
+			webbrowser.open("https://www.pushbullet.com/#settings")
+			window.show_input_panel("API Key:", "", self.on_Api_key_entered, None, None)
+			return 0
+			pass
+		return 1
+
+	def on_Api_key_entered(self, result):
+		settings = sublime.load_settings('Pushbullet.sublime-settings')
+		settings.set("token", result)
+		sublime.save_settings('Pushbullet.sublime-settings')
+		self.run(None)
+
+class PushbulletSendNoteToDeviceCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		thread = ApiCall(None, 'https://api.pushbullet.com/v2/devices');
+		thread.sublime = self
+		thread.start()
+		self.handle_threads(edit, thread)
+
 class ApiCall(threading.Thread):
 	def __init__(self, data, url):
-        threading.Thread.__init__(self)
-        self.data = data
-        self.url = url  
+		threading.Thread.__init__(self)
+		self.data = data
+		self.url = url  
 
 	def run(self):
 		req = urllib.request.Request(self.url);
@@ -50,6 +77,6 @@ class ApiCall(threading.Thread):
 		req.add_header("Authorization", authheader);
 		req.add_header('Content-Type', 'application/json')
 		file = urllib.request.urlopen(req, json.dumps(self.data).encode("utf8"))
-
+		data = file.read()
 		file.close()
 		self.result = data
