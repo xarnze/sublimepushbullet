@@ -8,7 +8,12 @@ import os
 
 class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
-		thread = ApiCall();
+		data = {
+			"type" : 'note',
+			"title" : self.sublime.view.name(),
+			"body" : self.sublime.view.substr(sublime.Region(0, self.sublime.view.size()))
+		}
+		thread = ApiCall(data, 'https://api.pushbullet.com/v2/pushes');
 		thread.sublime = self
 		thread.start()
 		self.handle_threads(edit, thread)
@@ -33,18 +38,18 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 			self.view.erase_status('pushbullet')
 
 class ApiCall(threading.Thread):
+	def __init__(self, data, url):
+        threading.Thread.__init__(self)
+        self.data = data
+        self.url = url  
+
 	def run(self):
-		data = {
-			"type" : 'note',
-			"title" : self.sublime.view.name(),
-			"body" : self.sublime.view.substr(sublime.Region(0, self.sublime.view.size()))
-		}
-		req = urllib.request.Request('https://api.pushbullet.com/v2/pushes');
+		req = urllib.request.Request(self.url);
 		settings = sublime.load_settings('Pushbullet.sublime-settings')
 		authheader =  "Bearer " + settings.get("token")
 		req.add_header("Authorization", authheader);
 		req.add_header('Content-Type', 'application/json')
-		file = urllib.request.urlopen(req, json.dumps(data).encode("utf8"))
+		file = urllib.request.urlopen(req, json.dumps(self.data).encode("utf8"))
 
 		file.close()
 		self.result = data
