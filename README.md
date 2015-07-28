@@ -30,3 +30,5 @@ Sends the text from the current file to all your devices
 ### Send to device
 
 Displays a list of devices for you to choose from and sends the current file text to the selected device
+
+![Demo](https://raw.githubusercontent.com/xarnze/sublimepushbullet/demo/push%20to%20device%20demo.gif)
