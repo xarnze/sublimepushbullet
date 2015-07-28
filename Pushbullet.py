@@ -5,8 +5,12 @@ import base64
 import threading
 import json
 import os
+import array
 import webbrowser
 import sublime_requests as requests
+# Disable HTTPS verification warnings.
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
 class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -20,10 +24,10 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 			thread = ApiCall(data, 'https://api.pushbullet.com/v2/pushes');
 			thread.sublime = self
 			thread.start()
-			self.handle_threads(edit, thread)
+			self.handle_threads(self.view, edit, thread)
 			pass
 
-	def handle_threads(self, edit, thread, offset=0, i=0, dir=1):
+	def handle_threads(self, view, edit, thread, offset=0, i=0, dir=1):
 		if thread.is_alive():
 			# This animates a little activity indicator in the status area
 			before = i % 8
@@ -33,14 +37,14 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 			if not before:
 				dir = 1
 			i += dir
-			self.view.set_status('pushbullet', 'Pushing [%s=%s]' % \
+			view.set_status('pushbullet', 'Pushing [%s=%s]' % \
 				(' ' * before, ' ' * after))
 
-			sublime.set_timeout(lambda: self.handle_threads(edit, thread,
+			sublime.set_timeout(lambda: self.handle_threads(view, edit, thread,
 				offset, i, dir), 100)
 			return
 		else:
-			self.view.erase_status('pushbullet')
+			view.erase_status('pushbullet')
 
 	def check_api_key(self, window):
 		settings = sublime.load_settings('Pushbullet.sublime-settings')
@@ -60,6 +64,7 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 
 class PushbulletSendNoteToDeviceCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
+		PushbulletSendNoteCommand(self).check_api_key(self.view.window())
 		thread = ApiCall(None, 'https://api.pushbullet.com/v2/devices');
 		thread.sublime = self
 		thread.start()
@@ -83,7 +88,31 @@ class PushbulletSendNoteToDeviceCommand(sublime_plugin.TextCommand):
 			return
 		else:
 			self.view.erase_status('pushbullet')
-			print(json.dumps(thread.result["devices"]).encode("utf8"))
+			device_list = []
+			pushable_devices = []
+			for device in thread.result["devices"]:
+				if device["pushable"]:
+					pushable_devices.append(device)
+					device_list.append(device["nickname"])
+					pass
+				pass
+			self.devices = pushable_devices
+			self.view.window().show_quick_panel(device_list, self.on_device_selected)
+
+	def on_device_selected(self, result):
+		if result != -1:
+			selected_device = self.devices[result]
+			data = {
+				"device_iden": selected_device["iden"],
+				"type" : 'note',
+				"title" : self.view.name(),
+				"body" : self.view.substr(sublime.Region(0, self.view.size()))
+			}
+			thread = ApiCall(data, 'https://api.pushbullet.com/v2/pushes');
+			thread.sublime = self
+			thread.start()
+			PushbulletSendNoteCommand(self).handle_threads(self.view, None, thread)
+			pass
 
 class ApiCall(threading.Thread):
 	def __init__(self, data, url):
@@ -92,15 +121,17 @@ class ApiCall(threading.Thread):
 		self.url = url  
 
 	def run(self):
-		req = urllib.request.Request(self.url);
 		settings = sublime.load_settings('Pushbullet.sublime-settings')
 		authheader =  "Bearer " + settings.get("token")
-		req.add_header("Authorization", authheader);
+		headers = {"Authorization":authheader}
+		session = requests.session()
+		response = None
 		if self.data != None:
-			req.add_header('Content-Type', 'application/json')
-			pass
-		response = urllib.request.urlopen(req, json.dumps(self.data).encode("utf8"))
-		encoding = response.headers.get_content_charset()
-		data = json.loads(response.readall().decode(encoding))
+			headers["Content-Type"] = 'application/json'
+			response = session.post(self.url, data=json.dumps(self.data).encode("utf8"), headers=headers)
+		else:
+			response = session.get(self.url, headers=headers)
+
+		data = response.json()
 		response.close()
 		self.result = data

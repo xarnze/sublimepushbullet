@@ -2,5 +2,9 @@
 	{
 		"caption": "Pushbullet: Push to all devices",
 		"command": "pushbullet_send_note"
+	},
+	{
+		"caption": "Pushbullet: Push to device",
+		"command": "pushbullet_send_note_to_device"
 	}
 ]
