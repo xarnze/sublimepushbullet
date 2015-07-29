@@ -6,5 +6,9 @@
 	{
 		"caption": "Pushbullet: Push to device",
 		"command": "pushbullet_send_note_to_device"
+	},
+	{
+		"caption": "Pushbullet: Push to contact",
+		"command": "pushbullet_send_note_to_contact"
 	}
 ]
