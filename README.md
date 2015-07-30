@@ -25,10 +25,16 @@ In the **Command Pallet** (Ctrl+shift+p) type pushbullet and select an option, t
 
 ### Send to all devices
 
-Sends the text from the current file to all your devices 
+Sends all or selected text from the current file to all your devices 
 
 ### Send to device
 
-Displays a list of devices for you to choose from and sends the current file text to the selected device
+Displays a list of devices for you to choose from and sends all or selected text from current file to the selected device
 
 ![Demo](https://raw.githubusercontent.com/xarnze/sublimepushbullet/demo/push%20to%20device%20demo.gif)
+
+### Send to Contact
+
+Send a push that contains all or selected text to any of your pushbullet contacts
+
+![Demo](https://raw.githubusercontent.com/xarnze/sublimepushbullet/demo/push%20to%20contact.gif)
