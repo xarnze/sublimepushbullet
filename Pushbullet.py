@@ -7,7 +7,6 @@ import json
 import os
 import array
 import webbrowser
-import sublime_requests as requests
 # Disable HTTPS verification warnings.
 from requests.packages import urllib3
 urllib3.disable_warnings()
