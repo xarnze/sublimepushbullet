@@ -17,7 +17,7 @@ class PushbulletSendNoteCommand(sublime_plugin.TextCommand):
 		keyEntered = self.check_api_key(self.view.window())
 		if keyEntered == 1:
 			for item in Pushbullet().get_push_text(self.view):
-				Pushbullet().send_note(None, "note", self.view.name(), item)
+				Pushbullet().send_note(None, "note", self.view.name(), item, self.view)
 			pass
 
 	def check_api_key(self, window):
